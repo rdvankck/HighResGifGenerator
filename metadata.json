@@ -1,0 +1,5 @@
+{
+  "name": "High-Res GIF Creator",
+  "description": "A powerful, client-side tool to create high-resolution GIFs from images with custom timing and dimensions.",
+  "requestFramePermissions": []
+}
