@@ -41,6 +41,13 @@ const App: React.FC = () => {
     setGeneratedGifUrl(null);
   };
 
+  const handleUpdateFrameDuration = (id: string, duration: number) => {
+    setFrames(prev => prev.map(frame => 
+      frame.id === id ? { ...frame, duration } : frame
+    ));
+    setGeneratedGifUrl(null);
+  };
+
   const handleGenerate = async () => {
     if (frames.length === 0) return;
 
@@ -161,6 +168,7 @@ const App: React.FC = () => {
                     settings={settings} 
                     generatedGifUrl={generatedGifUrl}
                     onRemoveFrame={handleRemoveFrame}
+                    onUpdateFrameDuration={handleUpdateFrameDuration}
                     isGenerating={status.isGenerating}
                 />
             </div>

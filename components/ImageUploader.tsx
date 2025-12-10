@@ -23,6 +23,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImagesSelected }) => {
               previewUrl: url,
               width: img.naturalWidth,
               height: img.naturalHeight,
+              duration: 1, // default 1 second
             });
           };
           img.src = url;

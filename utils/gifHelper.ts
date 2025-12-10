@@ -119,7 +119,7 @@ export const generateGif = async (
               // We stretch to fit the dimensions provided.
               ctx.drawImage(img, 0, 0, outputWidth, outputHeight);
               
-              gif.addFrame(canvas, { delay: settings.delay * 1000 });
+              gif.addFrame(canvas, { delay: frame.duration * 1000 });
           }
         }
 

@@ -4,6 +4,7 @@ export interface GifFrame {
   previewUrl: string;
   width: number;
   height: number;
+  duration: number; // in seconds
 }
 
 export interface GifSettings {
