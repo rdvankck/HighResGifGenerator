@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Download, Trash2, X } from 'lucide-react';
+import { Play, Download, Trash2, X, Clock } from 'lucide-react';
 import { GifFrame, GifSettings } from '../types';
 
 interface GifPreviewProps {
@@ -8,21 +8,35 @@ interface GifPreviewProps {
   generatedGifUrl: string | null;
   onRemoveFrame: (id: string) => void;
   isGenerating: boolean;
+  onUpdateFrameDuration: (id: string, duration: number) => void;
 }
 
-const GifPreview: React.FC<GifPreviewProps> = ({ frames, settings, generatedGifUrl, onRemoveFrame, isGenerating }) => {
+const GifPreview: React.FC<GifPreviewProps> = ({ frames, settings, generatedGifUrl, onRemoveFrame, isGenerating, onUpdateFrameDuration }) => {
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
 
-  // Simulation Logic
+  // Simulation Logic with individual frame durations
   useEffect(() => {
     if (frames.length === 0 || generatedGifUrl) return;
 
+    let frameIndex = 0;
     const interval = setInterval(() => {
-      setCurrentFrameIndex((prev) => (prev + 1) % frames.length);
-    }, settings.delay * 1000);
+      setCurrentFrameIndex(frameIndex);
+      frameIndex = (frameIndex + 1) % frames.length;
+    }, 100); // Check every 100ms
 
     return () => clearInterval(interval);
-  }, [frames.length, settings.delay, generatedGifUrl]);
+  }, [frames.length, generatedGifUrl]);
+
+  useEffect(() => {
+    if (frames.length === 0 || generatedGifUrl) return;
+
+    const currentFrame = frames[currentFrameIndex];
+    const timeout = setTimeout(() => {
+      setCurrentFrameIndex((prev) => (prev + 1) % frames.length);
+    }, currentFrame.duration * 1000);
+
+    return () => clearTimeout(timeout);
+  }, [currentFrameIndex, frames, generatedGifUrl]);
 
   if (frames.length === 0) {
     return (
@@ -55,7 +69,7 @@ const GifPreview: React.FC<GifPreviewProps> = ({ frames, settings, generatedGifU
                 className="max-w-full max-h-[500px] object-contain shadow-lg rounded transition-all duration-75"
               />
               <div className="absolute bottom-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-mono border border-white/10">
-                Preview Frame: {currentFrameIndex + 1} / {frames.length}
+                Frame: {currentFrameIndex + 1} / {frames.length} • {frames[currentFrameIndex].duration}s
               </div>
             </div>
           )}
@@ -68,35 +82,55 @@ const GifPreview: React.FC<GifPreviewProps> = ({ frames, settings, generatedGifU
             <span>Frame Timeline</span>
             <span className="text-xs bg-gray-700 px-2 py-0.5 rounded text-gray-300">{frames.length} frames</span>
         </h3>
-        <div className="flex space-x-2 overflow-x-auto pb-4 custom-scrollbar">
+        <div className="space-y-3">
           {frames.map((frame, idx) => (
             <div
               key={frame.id}
-              className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 group transition-all cursor-pointer ${
+              className={`flex items-center space-x-3 p-3 rounded-lg border-2 group transition-all ${
                 !generatedGifUrl && idx === currentFrameIndex
-                  ? 'border-indigo-500 ring-2 ring-indigo-500/20 scale-105 z-10'
-                  : 'border-gray-700 hover:border-gray-500'
+                  ? 'border-indigo-500 bg-indigo-500/5'
+                  : 'border-gray-700 hover:border-gray-600 bg-gray-800/30'
               }`}
-              onClick={() => setCurrentFrameIndex(idx)}
             >
-              <img
-                src={frame.previewUrl}
-                alt={`Thumb ${idx}`}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-1 left-1 bg-black/60 text-white text-[10px] px-1.5 rounded">
-                {idx + 1}
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemoveFrame(frame.id);
-                }}
-                disabled={isGenerating}
-                className="absolute top-1 right-1 bg-red-500/80 hover:bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity disabled:cursor-not-allowed"
+              <div
+                className="relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border cursor-pointer"
+                onClick={() => setCurrentFrameIndex(idx)}
               >
-                <X className="w-3 h-3" />
-              </button>
+                <img
+                  src={frame.previewUrl}
+                  alt={`Thumb ${idx}`}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-1 left-1 bg-black/60 text-white text-[10px] px-1 rounded">
+                  {idx + 1}
+                </div>
+              </div>
+              
+              <div className="flex-grow flex items-center space-x-3">
+                <div className="flex items-center space-x-2 flex-1">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  <label className="text-sm text-gray-300">Duration:</label>
+                  <input
+                    type="number"
+                    min="0.1"
+                    max="10"
+                    step="0.1"
+                    value={frame.duration}
+                    onChange={(e) => onUpdateFrameDuration(frame.id, parseFloat(e.target.value))}
+                    disabled={isGenerating}
+                    className="w-20 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                  />
+                  <span className="text-sm text-gray-400">seconds</span>
+                </div>
+                
+                <button
+                  onClick={() => onRemoveFrame(frame.id)}
+                  disabled={isGenerating}
+                  className="bg-red-500/80 hover:bg-red-500 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity disabled:cursor-not-allowed"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
